@@ -4,9 +4,9 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.sonatype.aether.artifact.Artifact;
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.util.graph.PreorderNodeListGenerator;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 import com.versioneye.utils.DependencyUtils;
 import com.versioneye.utils.JsonUtils;
 
@@ -23,10 +23,9 @@ public class JsonMojo extends ProjectMojo {
         try{
             PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
             DependencyNode root = getDependencyNode(nlg);
-            DependencyUtils dependencyUtils = new DependencyUtils();
 
-            List<Artifact> dependencies          = dependencyUtils.collectAllDependencies(nlg.getDependencies(true));
-            List<Artifact> directDependencies    = dependencyUtils.collectDirectDependencies(root.getChildren());
+            List<Artifact> dependencies          = DependencyUtils.collectAllDependencies(nlg.getDependencies(true));
+            List<Artifact> directDependencies    = DependencyUtils.collectDirectDependencies(root.getChildren());
             List<Artifact> recursiveDependencies = new ArrayList<Artifact>(dependencies);
             recursiveDependencies.removeAll(directDependencies);
 

@@ -1,10 +1,10 @@
 package com.versioneye;
 
-import org.sonatype.aether.artifact.Artifact;
-import org.sonatype.aether.collection.CollectRequest;
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.resolution.DependencyRequest;
-import org.sonatype.aether.util.graph.PreorderNodeListGenerator;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 import com.versioneye.utils.DependencyUtils;
 import com.versioneye.utils.JsonUtils;
 
@@ -22,16 +22,14 @@ public class ProjectMojo extends SuperMojo {
     }
 
     protected ByteArrayOutputStream getDirectArtifactsJsonStream() throws Exception {
-        DependencyUtils dependencyUtils = new DependencyUtils();
         DependencyNode root = getDependencyNode(new PreorderNodeListGenerator());
-        List<Artifact> directDependencies = dependencyUtils.collectDirectDependencies(root.getChildren());
+        List<Artifact> directDependencies = DependencyUtils.collectDirectDependencies(root.getChildren());
         JsonUtils jsonUtils = new JsonUtils();
         return jsonUtils.artifactsToJson(directDependencies);
     }
 
     protected DependencyNode getDependencyNode(PreorderNodeListGenerator nlg) throws Exception {
-        DependencyUtils dependencyUtils = new DependencyUtils();
-        CollectRequest collectRequest = dependencyUtils.getCollectRequest(project, repos);
+        CollectRequest collectRequest = DependencyUtils.getCollectRequest(project, repos);
         DependencyNode root = system.collectDependencies(session, collectRequest).getRoot();
         DependencyRequest dependencyRequest = new DependencyRequest(root, null);
         system.resolveDependencies(session, dependencyRequest);
