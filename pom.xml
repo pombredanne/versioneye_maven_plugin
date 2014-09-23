@@ -9,7 +9,7 @@
 
   <groupId>com.versioneye</groupId>
   <artifactId>versioneye-maven-plugin</artifactId>
-  <version>3.0.0</version>
+  <version>3.0.1-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>versioneye-maven-plugin</name>
@@ -42,9 +42,9 @@
 
   <properties>
     <!-- The minimum Maven version that should be supported. -->
-    <maven.version>3.2.1</maven.version>
+    <maven.version>3.2.3</maven.version>
     <jackson.version>1.9.13</jackson.version>
-    <httpcomponents.version>4.3.4</httpcomponents.version>
+    <httpcomponents.version>4.3.5</httpcomponents.version>
   </properties>
 
   <dependencies>
@@ -92,11 +92,11 @@
       <plugin>
         <groupId>com.versioneye</groupId>
         <artifactId>versioneye-maven-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>3.0.1-SNAPSHOT</version>
         <configuration>
-          <!-- <baseUrl>https://www.versioneye.com</baseUrl> -->
-          <!-- <baseUrl>http://127.0.0.1:3000</baseUrl> -->
           <projectId>51e2af93cbe2eb000203df22</projectId>
+          <!--<proxyHost>127.0.0.1</proxyHost>-->
+          <!--<proxyPort>8888</proxyPort>-->
         </configuration>
       </plugin>
 
