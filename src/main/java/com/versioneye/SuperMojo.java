@@ -1,5 +1,6 @@
 package com.versioneye;
 
+import com.versioneye.utils.PropertiesUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -9,8 +10,6 @@ import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import com.versioneye.dto.ProjectJsonResponse;
-import com.versioneye.utils.PropertiesUtils;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -78,6 +77,9 @@ public class SuperMojo extends AbstractMojo {
     @Parameter( property = "proxyPassword" )
     protected String proxyPassword = null;
 
+    @Parameter( property = "updatePropertiesAfterCreate" )
+    protected boolean updatePropertiesAfterCreate = true;
+
     protected Properties properties = null;     // Properties in src/main/resources
     protected Properties homeProperties = null; // Properties in ~/.m2/
 
@@ -88,9 +90,11 @@ public class SuperMojo extends AbstractMojo {
             return apiKey;
         Properties properties = fetchPropertiesFor("api_key");
         apiKey = properties.getProperty("api_key");
-        if (apiKey == null || apiKey.isEmpty())
-            throw new MojoExecutionException("versioneye.properties found but without an API Key! " +
-                    "Read the instructions at https://github.com/versioneye/versioneye_maven_plugin");
+        if (apiKey == null || apiKey.isEmpty()){
+            String msg = "versioneye.properties found but without an API Key! Read the instructions at https://github.com/versioneye/versioneye_maven_plugin";
+            getLog().error(msg);
+            throw new MojoExecutionException(msg);
+        }
         return apiKey;
     }
 
@@ -99,9 +103,12 @@ public class SuperMojo extends AbstractMojo {
             return projectId;
         Properties properties = fetchPropertiesFor("project_id");
         projectId = properties.getProperty("project_id");
-        if (projectId == null || projectId.isEmpty())
-            throw new MojoExecutionException("versioneye.properties found but without project_id! " +
-                    "Read the instructions at https://github.com/versioneye/versioneye_maven_plugin");
+        if (projectId == null || projectId.isEmpty()){
+            String msg = "versioneye.properties found but without project_id! Read the instructions at https://github.com/versioneye/versioneye_maven_plugin";
+            getLog().error(msg);
+            throw new MojoExecutionException(msg);
+        }
+
         return projectId;
     }
 
@@ -136,9 +143,12 @@ public class SuperMojo extends AbstractMojo {
                 getLog().warn(propertiesFile + " exists in src/main/resources, should be moved to src/qa/resources");
             }
         }
-        if (!file.exists())
-            throw new MojoExecutionException(propertiesPath + " is missing! Read the instructions at " +
-                    "https://github.com/versioneye/versioneye_maven_plugin");
+        if (!file.exists()){
+            String msg = propertiesPath + " is missing! Read the instructions at " +
+                    "https://github.com/versioneye/versioneye_maven_plugin";
+            getLog().error(msg);
+            throw new MojoExecutionException(msg);
+        }
         PropertiesUtils propertiesUtils = new PropertiesUtils();
         homeProperties = propertiesUtils.readProperties(propertiesPath);
         return homeProperties;
@@ -157,25 +167,12 @@ public class SuperMojo extends AbstractMojo {
             propertiesPath = homeDirectory + "/.m2/" + propertiesFile;
             file = new File(propertiesPath);
         }
-        if (!file.exists())
-            throw new MojoExecutionException(propertiesPath + " is missing! Read the instructions at " +
-                    "https://github.com/versioneye/versioneye_maven_plugin");
+        if (!file.exists()){
+            propertiesPath = projectDirectory + "/src/main/resources/" + propertiesFile;
+            file = new File(propertiesPath);
+        }
         this.propertiesPath = propertiesPath;
         return propertiesPath;
-    }
-
-    protected void writeProperties(ProjectJsonResponse response) throws Exception {
-        Properties properties = fetchProjectProperties();
-        if (response.getProject_key() != null) {
-            if (response.getProject_key() != null) {
-                properties.setProperty("project_key", response.getProject_key());
-            }
-            if (response.getId() != null) {
-                properties.setProperty("project_id", response.getId());
-            }
-        }
-        PropertiesUtils utils = new PropertiesUtils();
-        utils.writeProperties(properties, getPropertiesPath());
     }
 
     private void createPropertiesFile(File file) throws IOException {

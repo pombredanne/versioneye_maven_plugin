@@ -1,16 +1,18 @@
 package com.versioneye;
 
+import com.versioneye.dto.ProjectJsonResponse;
+import com.versioneye.utils.HttpUtils;
+import com.versioneye.utils.PropertiesUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.jackson.map.ObjectMapper;
-import com.versioneye.dto.ProjectJsonResponse;
-import com.versioneye.utils.HttpUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Reader;
+import java.util.Properties;
 
 /**
  * Creates a project at VersionEye based on the dependencies from the current project.
@@ -26,9 +28,15 @@ public class CreateMojo extends ProjectMojo {
             setProxy();
             prettyPrintStart();
             ByteArrayOutputStream jsonDirectDependenciesStream = getDirectDependenciesJsonStream();
+            if (jsonDirectDependenciesStream == null){
+                prettyPrint0End();
+                return ;
+            }
             ProjectJsonResponse response = uploadDependencies(jsonDirectDependenciesStream);
-            writeProperties( response );
-            prettyPrintEnd(response);
+            if (updatePropertiesAfterCreate) {
+                writeProperties( response );
+            }
+            prettyPrint(response);
         } catch( Exception exception ){
             throw new MojoExecutionException("Oh no! Something went wrong :-( " +
                     "Get in touch with the VersionEye guys and give them feedback." +
@@ -50,13 +58,13 @@ public class CreateMojo extends ProjectMojo {
         getLog().info(".");
     }
 
-    private void prettyPrintEnd(ProjectJsonResponse response) throws Exception {
-        getLog().info(".");
-        getLog().info("Dependencies: " + response.getDep_number());
-        getLog().info("Outdated: "     + response.getOut_number());
-        getLog().info(".");
-        getLog().info("You can find your project here: " + baseUrl + "/user/projects/" + response.getId() );
-        getLog().info(".");
+    protected void writeProperties(ProjectJsonResponse response) throws Exception {
+        Properties properties = fetchProjectProperties();
+        if (response.getId() != null) {
+            properties.setProperty("project_id", response.getId());
+        }
+        PropertiesUtils utils = new PropertiesUtils();
+        utils.writeProperties(properties, getPropertiesPath());
     }
 
 }
