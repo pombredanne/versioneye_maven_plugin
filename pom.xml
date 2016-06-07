@@ -9,7 +9,7 @@
 
   <groupId>com.versioneye</groupId>
   <artifactId>versioneye-maven-plugin</artifactId>
-  <version>3.1.0</version>
+  <version>3.9.2</version>
   <packaging>maven-plugin</packaging>
 
   <name>versioneye-maven-plugin</name>
@@ -21,6 +21,8 @@
   </description>
 
   <scm>
+    <connection>scm:git:https://github.com/versioneye/versioneye_maven_plugin.git</connection>
+    <developerConnection>scm:git:https://github.com/versioneye/versioneye_maven_plugin.git</developerConnection>
     <url>https://github.com/versioneye/versioneye_maven_plugin.git</url>
   </scm>
 
@@ -36,7 +38,7 @@
       <name>Robert Reiz</name>
       <id>reiz</id>
       <organization>VersionEye</organization>
-      <organizationUrl>http://www.VersionEye.com</organizationUrl>
+      <organizationUrl>https://www.VersionEye.com</organizationUrl>
     </developer>
   </developers>
 
@@ -50,9 +52,9 @@
 
   <properties>
     <!-- The minimum Maven version that should be supported. -->
-    <maven.version>3.2.3</maven.version>
+    <maven.version>3.3.9</maven.version>
     <jackson.version>1.9.13</jackson.version>
-    <httpcomponents.version>4.3.6</httpcomponents.version>
+    <httpcomponents.version>4.5.2</httpcomponents.version>
   </properties>
 
   <dependencies>
@@ -69,7 +71,7 @@
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
       <artifactId>maven-plugin-annotations</artifactId>
-      <version>3.3</version>
+      <version>3.4</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -92,6 +94,12 @@
       <artifactId>httpmime</artifactId>
       <version>${httpcomponents.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>6.9.10</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -100,22 +108,45 @@
       <plugin>
         <groupId>com.versioneye</groupId>
         <artifactId>versioneye-maven-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.9.1</version>
         <configuration>
-          <projectId>544d0ff9512592562c000003</projectId>
-          <!--<apiKey>my_secret_api_key</apiKey>-->
+          <!--<apiKey>YOUR_API_KEY</apiKey> --> <!-- To find here: https://www.versioneye.com/settings/api -->
           <!--<baseUrl>http://localhost:3000</baseUrl>-->
           <!--<proxyHost>127.0.0.1</proxyHost>-->
           <!--<proxyPort>8888</proxyPort>-->
           <!--<proxyUser>proxy_hopsi</proxyUser>-->
           <!--<proxyPassword>dont_tell_anybody</proxyPassword>-->
           <!--<updatePropertiesAfterCreate>false</updatePropertiesAfterCreate>-->
+          <!--<mergeAfterCreate>false</mergeAfterCreate>--> <!-- This is only for multi module projects! -->
+          <!--<parentGroupId>com.versioneye</parentGroupId>-->
+          <!--<parentArtifactId>versioneye-maven-plugin</parentArtifactId>-->
+          <!--<nameStrategy>GA</nameStrategy>--> <!-- Default value is 'name'. Other options are 'GA' and 'artifact_id'. -->
+          <!--<skipScopes>test</skipScopes>-->
+          <!--<organisation>versioneye</organisation>-->
+          <!--<name>NameOfTheProjectAtVersionEye</name>-->
+          <!--<visibility>TrueOrFalse</visibility>-->
         </configuration>
       </plugin>
+
+      <!--http://central.sonatype.org/pages/apache-maven.html-->
+      <!--mvn clean deploy -Dgpg.passphrase=-->
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.7</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+
 
       <!-- mvn gpg:sign -->
       <!-- mvn gpg:sign-and-deploy-file -->
       <!-- mvn clean deploy -Dgpg.passphrase=my_secret_passphrase -->
+      <!-- mvn clean install -Dgpg.passphrase=my_secret_passphrase -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
@@ -133,7 +164,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.2</version>
+        <version>3.4</version>
         <configuration>
           <goalPrefix>versioneye</goalPrefix>
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -157,7 +188,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>2.2.1</version>
+        <version>3.0.0</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -170,5 +201,22 @@
 
     </plugins>
   </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-changelog-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <type>tag</type>
+          <tags>
+            <tag implementation="java.lang.String">3.5.1</tag>
+            <tag implementation="java.lang.String">3.6.0</tag>
+          </tags>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
 
 </project>

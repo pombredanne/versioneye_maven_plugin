@@ -1,25 +1,15 @@
 package com.versioneye;
 
 import com.versioneye.dto.ProjectJsonResponse;
-import com.versioneye.utils.HttpUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
-import java.io.Reader;
 
-/**
- * Updates an existing project at VersionEye with the dependencies from the current project.
- */
-@Mojo( name = "update", defaultPhase = LifecyclePhase.PROCESS_SOURCES )
-public class UpdateMojo extends ProjectMojo {
-
-    @Parameter( property = "resource", defaultValue = "/projects")
-    private String resource;
+@Mojo( name = "securityCheck", defaultPhase = LifecyclePhase.PROCESS_SOURCES )
+public class SecurityCheckMojo extends UpdateMojo {
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         try{
@@ -31,6 +21,14 @@ public class UpdateMojo extends ProjectMojo {
                 return ;
             }
             ProjectJsonResponse response = uploadDependencies(jsonDirectDependenciesStream);
+
+            System.out.println("sv_count: " + response.getSv_count());
+
+            if (response.getSv_count() > 0){
+                throw new MojoExecutionException("Some components security vulnerabilities! " +
+                        "More details here: " + baseUrl + "/user/projects/" + response.getId() );
+            }
+
             prettyPrint( response );
         } catch( Exception exception ){
             exception.printStackTrace();
@@ -38,21 +36,6 @@ public class UpdateMojo extends ProjectMojo {
                     "Get in touch with the VersionEye guys and give them feedback. " +
                     "You find them on Twitter at https//twitter.com/VersionEye. ", exception);
         }
-    }
-
-    protected ProjectJsonResponse uploadDependencies(ByteArrayOutputStream outStream) throws Exception {
-        String apiKey = fetchApiKey();
-        String projectId = fetchProjectId();
-        String url = baseUrl + apiPath + resource + "/" + projectId + "?api_key=" + apiKey;
-        Reader reader = HttpUtils.post(url, outStream.toByteArray(), "project_file", null, null, null, null);
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(reader, ProjectJsonResponse.class );
-    }
-
-    protected void prettyPrintStart(){
-        getLog().info(".");
-        getLog().info("Starting to update dependencies to server. This can take a couple seconds ... ");
-        getLog().info(".");
     }
 
 }

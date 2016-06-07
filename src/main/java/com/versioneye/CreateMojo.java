@@ -8,6 +8,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
@@ -27,12 +28,13 @@ public class CreateMojo extends ProjectMojo {
         try{
             setProxy();
             prettyPrintStart();
-            ByteArrayOutputStream jsonDirectDependenciesStream = getDirectDependenciesJsonStream();
+            ByteArrayOutputStream jsonDirectDependenciesStream = getDirectDependenciesJsonStream(nameStrategy);
             if (jsonDirectDependenciesStream == null){
                 prettyPrint0End();
                 return ;
             }
             ProjectJsonResponse response = uploadDependencies(jsonDirectDependenciesStream);
+            merge(response.getId());
             if (updatePropertiesAfterCreate) {
                 writeProperties( response );
             }
@@ -47,7 +49,7 @@ public class CreateMojo extends ProjectMojo {
     private ProjectJsonResponse uploadDependencies(ByteArrayOutputStream outStream) throws Exception {
         String apiKey = fetchApiKey();
         String url = baseUrl + apiPath + resource + apiKey;
-        Reader reader = HttpUtils.post(url, outStream.toByteArray(), "upload");
+        Reader reader = HttpUtils.post(url, outStream.toByteArray(), "upload", visibility, name, organisation, team);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(reader, ProjectJsonResponse.class );
     }
@@ -65,6 +67,40 @@ public class CreateMojo extends ProjectMojo {
         }
         PropertiesUtils utils = new PropertiesUtils();
         utils.writeProperties(properties, getPropertiesPath());
+    }
+
+    protected void merge(String childId) {
+        if (mergeAfterCreate == false) {
+            return ;
+        }
+        try {
+
+            if (parentGroupId == null || parentGroupId.isEmpty() ||
+                    parentArtifactId == null || parentArtifactId.isEmpty()){
+                MavenProject mp = project.getParent();
+                if (mp == null || mp.getGroupId() == null || mp.getGroupId().isEmpty() ||
+                        mp.getArtifactId() == null || mp.getArtifactId().isEmpty()){
+                    return ;
+                }
+                parentGroupId = mp.getGroupId();
+                parentArtifactId = mp.getArtifactId();
+            }
+
+            parentGroupId = parentGroupId.replaceAll("\\.", "~").replaceAll("/", ":");
+            parentArtifactId = parentArtifactId.replaceAll("\\.", "~").replaceAll("/", ":");
+
+            if (project.getGroupId().equals(parentGroupId) && project.getArtifactId().equals(parentArtifactId)){
+                return ;
+            }
+
+            getLog().debug("group: " + parentGroupId + " artifact: " + parentArtifactId);
+            String url = baseUrl + apiPath + "/projects/" + parentGroupId + "/" + parentArtifactId + "/merge_ga/" + childId + "?api_key=" + fetchApiKey();
+
+            String response = HttpUtils.get(url);
+            getLog().debug("merge response: " + response);
+        } catch (Exception ex) {
+            getLog().error(ex);
+        }
     }
 
 }

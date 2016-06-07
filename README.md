@@ -1,12 +1,11 @@
 - Version 2.0.1 with Maven 3.0.5 [![Dependency Status](http://www.versioneye.com/user/projects/5379ad3f14c158ccc700002d/badge.svg?style=flat)](http://www.versioneye.com/user/projects/5379ad3f14c158ccc700002d)
-- Version 3.1.0 with Maven 3.2.1 [![Dependency Status](https://www.versioneye.com/user/projects/544d0ff9512592562c000003/badge.svg?style=flat)](https://www.versioneye.com/user/projects/544d0ff9512592562c000003)
+- Version 3.9.2 with Maven 3.3.9 [![Dependency Status](https://www.versioneye.com/user/projects/544d0ff9512592562c000003/badge.svg?style=flat)](https://www.versioneye.com/user/projects/544d0ff9512592562c000003)
 
 [![VersionEye Dependencies](src/site/images/VersionEyeLogo.png)](https://www.versioneye.com)
 
 # VersionEye Maven Plugin
 
-The [maven](http://maven.apache.org/) plugin for [VersionEye](http://www.versioneye.com) helps you to create/update a project at VersionEye.
-VersionEye is a Notification System for Software Libraries. It will help you to keep your projects up-to-date and automatically notify you about outdated dependencies. You can check it out here: [www.versioneye.com](http://www.versioneye.com).
+The [maven](http://maven.apache.org/) plugin for [VersionEye](http://www.versioneye.com) helps you to create/update a project at VersionEye, which is a Notification System for Software Libraries. It will help you to keep your projects up-to-date and automatically notify you about outdated dependencies and license violations. You can check it out here: [www.versioneye.com](http://www.versioneye.com).
 
 Summary
 
@@ -16,9 +15,14 @@ Summary
  - [API Key](#api-key)
  - [mvn versioneye:create](#mvn-versioneyecreate)
  - [mvn versioneye:update](#mvn-versioneyeupdate)
+ - [mvn versioneye:licenseCheck](#mvn-versioneyelicensecheck)
+ - [mvn versioneye:securityCheck] (#mvn-versioneyesecuritycheck)
+ - [mvn versioneye:securityAndLicenseCheck] (#mvn-versioneyesecurityandlicesecheck)
+ - [mvn versioneye:delete](#mvn-versioneyedelete)
  - [Proxy](#proxy)
  - [VersionEye Enterprise](#versioneye-enterprise)
  - [Multi-Module Projects](#multi-module-projects)
+ - [Configuration Options](#configuration-options)
  - [Feedback](#feedback)
  - [License](#license)
 
@@ -39,13 +43,13 @@ You can add the plugin to your project by adding this snippet to your
     <plugin>
       <groupId>com.versioneye</groupId>
       <artifactId>versioneye-maven-plugin</artifactId>
-      <version>3.1.0</version>
+      <version>3.9.2</version>
     </plugin>
   </plugins>
 </build>
 ```
 
-The `versioneye-maven-plugin` is tested against Maven 3.2.1.
+The `versioneye-maven-plugin` is tested against Maven 3.3.9.
 If you are using Maven 3.0.5 or older you should use the
 `versioneye-maven-plugin` version 2.0.1.
 
@@ -134,10 +138,10 @@ Now let the versioneye-maven-plugin know what your *API KEY* is.
     <plugin>
       <groupId>com.versioneye</groupId>
       <artifactId>versioneye-maven-plugin</artifactId>
-      <version>3.1.0</version>
+      <version>3.9.2</version>
       <configuration>
-	    <apiKey>MY_SECRET_API_KEY</apiKey>
-	  </configuration>
+        <apiKey>MY_SECRET_API_KEY</apiKey>
+      </configuration>
     </plugin>
   </plugins>
 </build>
@@ -169,10 +173,10 @@ If you want so you can configure another place for the versioneye.properties fil
     <plugin>
       <groupId>com.versioneye</groupId>
       <artifactId>versioneye-maven-plugin</artifactId>
-      <version>3.1.0</version>
+      <version>3.9.2</version>
       <configuration>
-	    <propertiesPath>${basedir}/versioneye.properties</propertiesPath>
-	  </configuration>
+        <propertiesPath>${basedir}/versioneye.properties</propertiesPath>
+      </configuration>
     </plugin>
   </plugins>
 </build>
@@ -185,6 +189,14 @@ If the plugin can't find the API KEY in any of this locations it will look it up
 ```
 
 That means if you don't want to commit your *API KEY* to the server and share it with your team you can place the file in your *home* directory and keep it for you.
+
+Of course you can store the API key in an environment variable `VERSIONEYE_API_KEY` as well. 
+
+```
+export VERSIONEYE_API_KEY=my_secret_api_key
+```
+
+That's a good way to deal with the API key on an CI system. 
 
 ## mvn versioneye:create
 
@@ -226,14 +238,55 @@ By the way. If you don't like to have a `versioneye.properties` file you can set
     <plugin>
       <groupId>com.versioneye</groupId>
       <artifactId>versioneye-maven-plugin</artifactId>
-      <version>3.1.0</version>
+      <version>3.9.2</version>
       <configuration>
-	    <projectId>_YOUR_VERSONEYE_PROJECT_ID_</projectId>
-	  </configuration>
+        <projectId>_YOUR_VERSONEYE_PROJECT_ID_</projectId>
+      </configuration>
     </plugin>
   </plugins>
 </build>
 ```
+
+## mvn versioneye:licenseCheck
+
+On VersionEye you can have [License Whitelists](http://blog.versioneye.com/2014/09/15/license-whitelist/). If you
+are working with License Whitelists you probably want to break the build if there is a license violation.
+The next goal will update your VersionEye project with the current dependencies and check them against a
+License Whitelist. If there is a violation of the License Whitelist this goal will break your build:
+
+```
+mvn versioneye:licenseCheck
+```
+
+## mvn versioneye:securityCheck
+
+This goald will check if your dependencies have known security vulnerabilities:
+
+```
+mvn versioneye:securityCheck
+```
+
+If one of project dependencies has a known security vulnerability this goal will break your build!
+
+## mvn versioneye:securityAndLiceseCheck
+
+This goald will check if your dependencies have known security vulnerabilities or if they violate teh license whitelist on the server:
+
+```
+mvn versioneye:securityAndLiceseCheck
+```
+
+If one of the 2 is violated this goal will break your build!
+
+## mvn versioneye:delete
+
+This goal will delete the project from the VersionEye server:
+
+```
+mvn versioneye:delete
+```
+
+This golad will also remove all related `versioneye.properties` files!
 
 ## Proxy
 
@@ -245,13 +298,13 @@ If you are behind a proxy server you can configure the plugin for that like this
     <plugin>
       <groupId>com.versioneye</groupId>
       <artifactId>versioneye-maven-plugin</artifactId>
-      <version>3.1.0</version>
+      <version>3.9.2</version>
       <configuration>
         <proxyHost>127.0.0.1</proxyHost>
         <proxyPort>8888</proxyPort>
         <proxyUser>proxy_hopsi</proxyUser>
         <proxyPassword>dont_tell_anybody</proxyPassword>
-	  </configuration>
+      </configuration>
     </plugin>
   </plugins>
 </build>
@@ -273,11 +326,11 @@ The whole plugin snippet would look similar to this one.
     <plugin>
       <groupId>com.versioneye</groupId>
       <artifactId>versioneye-maven-plugin</artifactId>
-      <version>3.1.0</version>
+      <version>3.9.2</version>
       <configuration>
         <baseUrl>http://versioneye.my-company.com</baseUrl>
-	    <projectId>_YOUR_VERSONEYE_PROJECT_ID_</projectId>
-	  </configuration>
+        <projectId>_YOUR_VERSONEYE_PROJECT_ID_</projectId>
+      </configuration>
     </plugin>
   </plugins>
 </build>
@@ -285,7 +338,7 @@ The whole plugin snippet would look similar to this one.
 
 ## Multi-Module Projects
 
-Assume you have a big Java Enterprise multi-module project with Maven and you want to have all modules monitored by VersionEye. I furhter assume that all modules have the same parent pom and the modules are listed in the parent pom.xml file. In that case all you have to do is configuring the VersionEye Maven Plugin once in the parent pom. 
+Assume you have a big Java Enterprise multi-module project with Maven and you want to have all modules monitored by VersionEye. I furhter assume that all modules have the same parent pom and the modules are listed in the parent pom.xml file. In that case all you have to do is configuring the VersionEye Maven Plugin once in the parent pom.
 
 ```
 <build>
@@ -293,10 +346,10 @@ Assume you have a big Java Enterprise multi-module project with Maven and you wa
     <plugin>
       <groupId>com.versioneye</groupId>
       <artifactId>versioneye-maven-plugin</artifactId>
-      <version>3.1.0</version>
+      <version>3.9.2</version>
       <configuration>
-	    <apiKey>MY_SECRET_API_KEY</apiKey>
-	  </configuration>
+        <apiKey>MY_SECRET_API_KEY</apiKey>
+      </configuration>
     </plugin>
   </plugins>
 </build>
@@ -308,19 +361,78 @@ Now run this command in the parent directory:
 mvn versioneye:create
 ```
 
-This command will be executed on each module. The plugin will create for each module a new project on VersionEye. Beside that the plugin will create for each module a `versioneye.properties` file with the corresponding project_id. The file will be created/updated in the `src/main/resources` directory of each module. 
+This command will be executed on each module. The plugin will create for each module a new project on VersionEye. Beside that the plugin will create for each module a `versioneye.properties` file with the corresponding project_id. The file will be created/updated in the `src/main/resources` directory of each module.
 
-After the projects are created on VersionEye we don't need the `create` goal anymore. Now we can perform the `update` goal on each build. 
+After the projects are created on VersionEye we don't need the `create` goal anymore. Now we can perform the `update` goal on each build.
 
 ```
 mvn versioneye:update
 ```
 
-This will update the project on VersionEye with the current dependencies in the modules pom.xml file. Executing this command in the parent pom directory will update all modules. Ideally this goal is executed on the Continuous Integration System after each build. 
+This will update the project on VersionEye with the current dependencies in the modules pom.xml file. Executing this command in the parent pom directory will update all modules. Ideally this goal is executed on the Continuous Integration System after each build.
 
-Here is a YouTube video which demonstrates how to setup a multi-module project with the VersionEye Maven Plugin. 
+Here is a YouTube video which demonstrates how to setup a multi-module project with the VersionEye Maven Plugin.
 
 [![VersionEye Maven Plugin Video](src/site/images/VersionEyeMavenPlugin.png)](http://www.youtube.com/watch?v=JPVEuqGHbeU)
+
+## Configuration Options
+
+The VersionEye Maven Plugin has many configuration options.
+
+```
+      <plugin>
+        <groupId>com.versioneye</groupId>
+        <artifactId>versioneye-maven-plugin</artifactId>
+        <version>3.9.2</version>
+        <configuration>
+          <projectId>544d0ff9512592562c000003</projectId>
+          <!--<apiKey>my_secret_api_key</apiKey>-->
+          <!--<baseUrl>http://localhost:3000</baseUrl>-->
+          <!--<proxyHost>127.0.0.1</proxyHost>-->
+          <!--<proxyPort>8888</proxyPort>-->
+          <!--<proxyUser>proxy_hopsi</proxyUser>-->
+          <!--<proxyPassword>dont_tell_anybody</proxyPassword>-->
+          <!--<updatePropertiesAfterCreate>false</updatePropertiesAfterCreate>-->
+          <!--<mergeAfterCreate>false</mergeAfterCreate>-->
+          <!--<parentGroupId>com.versioneye</parentGroupId>-->
+          <!--<parentArtifactId>versioneye-maven-plugin</parentArtifactId>-->
+          <!--<nameStrategy>name</nameStrategy>-->
+          <!--<trackPlugins>true</trackPlugins>-->
+          <!--<licenseCheckBreakByUnknown>true</licenseCheckBreakByUnknown>-->
+          <!--<skipScopes>test,provided</skipScopes>-->
+          <!--<organisation>versioneye</organisation>-->
+          <!--<team>backend_devs</team>-->
+          <!--<name>NameOfTheProjectAtVersionEye</name>-->
+          <!--<visibility>public</visibility>-->
+          <!--<ignoreDependencyManagement>false</ignoreDependencyManagement>-->
+        </configuration>
+      </plugin>
+```
+Here is a more detailed documentation of the configuration options.
+
+Config option | Description
+------------- | -----------
+apiKey        | Your secret API Key for the VersionEye API. Get it here: [https://www.versioneye.com/settings/api](https://www.versioneye.com/settings/api)
+baseUrl       | Set the base URL for the VersionEye API. Only needed for VersionEye Enterprise!
+proxyHost     | Set your proxy host name or IP.
+proxyPort     | Set your proxy port here.
+proxyUser     | Set you proxy user name here.
+proxyPassword | Set your proxy password here.
+updatePropertiesAfterCreate | This is related to this [issue](https://github.com/versioneye/versioneye_maven_plugin/issues/34)
+mergeAfterCreate | If the plugin is executed on a multi module project, the plugin will merge all submodules into the parent project by default. If this behaviour is not desired it can be switched off with this configuraiton option!
+parentGroupId | If the plugin is executed on a multi module project, the plugin will merge all submodules into the parent project on the server. the parent project is determined from the pom.xml. However it is possible to set the group_id of the parent project exeplicitly! That way the submodules can be merged into any other Java project at VersionEye.
+parentArtifactId | If the plugin is executed on a multi module project, the plugin will merge all submodules into the parent project on the server. the parent project is determined from the pom.xml. However it is possible to set the artifact_id of the parent project exeplicitly! That way the submodules can be merged into any other Java project at VersionEye.
+nameStrategy  | If a new project is created the plugin will take the `name` attribute from the pom.xml as the name of the project at VersionEye. Other naming strategies are possible <ul><li><b>GA</b>: Takes "GroupID / ArtifactID" as name</li><li><b>artifact_id</b>: Takes the "ArtifactID" as name</li></ul> The project name can be changed on the server afterwards and is not needed to identify a project!
+trackPlugins  | By default the plugins who are defined in the pom.xml file are handled like regular dependencies with the "plugin" scope. Plugins can be ignored by setting this property to "false".
+licenseCheckBreakByUnknown | If this is true then the goal "versioneye:licenseCheck" will break the build if there is a component without any license.
+skipScopes    | Comma seperated list of scopes which should be ignored by this plugin.
+organisation  | The name of an organisation at VersionEye. If this is set the project will be assigend to that organisation!
+team          | The name of the team inside the organisation at VersionEye. If this is set the project will be assigend to that team! The team which is defined here has to exist in the organisation which is defined here!
+name          | With this property you can set explicitly the name of the VersionEye project.
+visibility    | 'public' of 'private'. Controls if the project on VersionEye will be public or private.
+propertiesPath | The path to the versioneye.properties file. By default it is "/src/main/resources/"
+ignoreDependencyManagement | If this attribute is true the dependencies from "DependencyManagement" are ignored. By default it is false!
+
 
 ## Feedback
 

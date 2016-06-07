@@ -1,22 +1,17 @@
 package com.versioneye;
 
-import com.versioneye.dto.ProjectJsonResponse;
+
 import com.versioneye.utils.HttpUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.ByteArrayOutputStream;
-import java.io.Reader;
+import java.io.File;
 
-/**
- * Updates an existing project at VersionEye with the dependencies from the current project.
- */
-@Mojo( name = "update", defaultPhase = LifecyclePhase.PROCESS_SOURCES )
-public class UpdateMojo extends ProjectMojo {
+@Mojo( name = "delete", defaultPhase = LifecyclePhase.PROCESS_SOURCES )
+public class DeleteMojo extends ProjectMojo {
 
     @Parameter( property = "resource", defaultValue = "/projects")
     private String resource;
@@ -25,13 +20,8 @@ public class UpdateMojo extends ProjectMojo {
         try{
             setProxy();
             prettyPrintStart();
-            ByteArrayOutputStream jsonDirectDependenciesStream = getDirectDependenciesJsonStream(nameStrategy);
-            if (jsonDirectDependenciesStream == null){
-                prettyPrint0End();
-                return ;
-            }
-            ProjectJsonResponse response = uploadDependencies(jsonDirectDependenciesStream);
-            prettyPrint( response );
+            deleteProject();
+            deletePropertiesFile();
         } catch( Exception exception ){
             exception.printStackTrace();
             throw new MojoExecutionException("Oh no! Something went wrong. " +
@@ -40,19 +30,23 @@ public class UpdateMojo extends ProjectMojo {
         }
     }
 
-    protected ProjectJsonResponse uploadDependencies(ByteArrayOutputStream outStream) throws Exception {
+    protected void deleteProject() throws Exception {
         String apiKey = fetchApiKey();
         String projectId = fetchProjectId();
         String url = baseUrl + apiPath + resource + "/" + projectId + "?api_key=" + apiKey;
-        Reader reader = HttpUtils.post(url, outStream.toByteArray(), "project_file", null, null, null, null);
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(reader, ProjectJsonResponse.class );
+
+        HttpUtils.delete(url);
+    }
+
+    protected void deletePropertiesFile() throws Exception{
+        String propertiesPath = getPropertiesPath();
+        File file = new File(propertiesPath);
+        file.delete();
     }
 
     protected void prettyPrintStart(){
         getLog().info(".");
-        getLog().info("Starting to update dependencies to server. This can take a couple seconds ... ");
+        getLog().info("Starting to delete this project from the VersionEye server. This can take a couple seconds ... ");
         getLog().info(".");
     }
-
 }
