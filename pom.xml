@@ -9,7 +9,7 @@
 
   <groupId>com.versioneye</groupId>
   <artifactId>versioneye-maven-plugin</artifactId>
-  <version>3.9.2</version>
+  <version>3.10.0</version>
   <packaging>maven-plugin</packaging>
 
   <name>versioneye-maven-plugin</name>
@@ -97,9 +97,14 @@
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
-      <version>6.9.10</version>
+      <version>6.9.12</version>
       <scope>test</scope>
     </dependency>
+    <!--<dependency>-->
+      <!--<groupId>io.reactivex</groupId>-->
+      <!--<artifactId>rxjava</artifactId>-->
+      <!--<version>[1.1.0,)</version>-->
+    <!--</dependency>-->
   </dependencies>
 
   <build>
@@ -108,7 +113,7 @@
       <plugin>
         <groupId>com.versioneye</groupId>
         <artifactId>versioneye-maven-plugin</artifactId>
-        <version>3.9.1</version>
+        <version>3.10.0</version>
         <configuration>
           <!--<apiKey>YOUR_API_KEY</apiKey> --> <!-- To find here: https://www.versioneye.com/settings/api -->
           <!--<baseUrl>http://localhost:3000</baseUrl>-->
@@ -125,6 +130,7 @@
           <!--<organisation>versioneye</organisation>-->
           <!--<name>NameOfTheProjectAtVersionEye</name>-->
           <!--<visibility>TrueOrFalse</visibility>-->
+          <transitiveDependencies>false</transitiveDependencies>
         </configuration>
       </plugin>
 
@@ -188,12 +194,25 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>3.0.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>
             <goals>
               <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
             </goals>
           </execution>
         </executions>
